@@ -35,7 +35,7 @@
 	:default ""}
        {:db [:varchar :max-length]
 	:valid? char-field-validation
-	:cast str}))
+	:cast (fn [sign value] (str value))}))
 
 ; :integer-field
 (def integer-field-definition

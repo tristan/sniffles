@@ -1,6 +1,7 @@
 (ns sniffles.models
   (:use sniffles.fields
 	clojure.contrib.str-utils)
+  (:require [sniffles.db :as db])
 )
 
 (defmacro third [coll]
@@ -24,11 +25,15 @@
 			 {})
 		       fields)
 	      {:is-model? true
-	       :name '~name
+	       ;:name '~name
+	       :var #'~name
 	       :primary-key ~(if (empty? primary-keys) 
 			       [:id] 
 			       (vec (map #(keyword (first %)) primary-keys)))
 	       })))))
+
+(defmacro get-primary-key [obj]
+  `(map (fn [x#] (get ~obj x#)) (:primary-key (meta (var-get (:model (meta ~obj)))))))
 
 (defn create-object [typ & constructer]
   (let [inputs (cond (and (= (count constructer) 1)
@@ -36,22 +41,40 @@
 		     (first constructer)
 		     :else ; making room for future expansion.
 		     (throw (UnsupportedOperationException.)))]
-    (with-meta
-      (reduce #(assoc %1 (key %2)
-		      (if (contains? inputs (key %2))
-			(let [value (field-cast (val %2) ((key %2) inputs))]
-			  (if (field-valid? (val %2) value)
-			    value
-			    (throw (Exception. "invalid field input"))))
-			(field-default (val %2))))
-	      {} (seq typ))
-      {:model (:name (meta typ))})))
+    (let [obj
+	  (reduce #(assoc %1 (key %2)
+			  (if (contains? inputs (key %2))
+			    (let [value (field-cast (val %2) ((key %2) inputs))]
+			      (if (field-valid? (val %2) value)
+				value
+				(throw (Exception. "invalid field input"))))
+			    (field-default (val %2))))
+		  {} (seq typ))]
+      (with-meta obj
+	{:model (:var (meta typ))
+	 :id nil;(vec (map #(get obj %) (:primary-key (meta typ))))
+       }))))
 
-(defn save-object [obj] 
-  (if (or (nil? (meta obj)) (not (contains? (meta obj) :type)))
+(defn save-object [obj]
+  (if (or (nil? (meta obj)) (not (contains? (meta obj) :model)))
     (throw (Exception. 
 	    "unable to distinguish type of this object. make sure the meta of the object is retained"))
-    (let [type (:type (meta obj))
-	  id (:id (meta obj))]
-)))
+    (let [typ (:model (meta obj))
+	  update? (:exists? (meta obj))]
+      ;(println typ update?)
+      (if update?
+	(do (db/update-values typ obj)
+	    (with-meta obj
+	      (conj (meta obj)
+		    {:id (get-primary-key obj)}
+		    )))
+	(let [r (db/insert-values typ obj)
+	      obj (conj obj r)]  ; add auto generated attributes to the obj
+	  (with-meta
+	    obj
+	    (conj (meta obj)
+		  {:exists? true
+		   :id (get-primary-key obj)})
+	))))))
+
      

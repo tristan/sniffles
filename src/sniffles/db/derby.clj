@@ -2,7 +2,7 @@
   (:use clojure.contrib.str-utils))
 
 (def specification
-     {:classname "org.apache.derby.jdbc.EmbeddedDriver"
+     {:classname "org.apache.derby.jdbc.EmbeddedDriver" 
       :subprotocol "derby"
       :subname "database.derby"
       :create true})
