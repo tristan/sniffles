@@ -1,80 +1,57 @@
 (ns sniffles.models
   (:use sniffles.fields
 	clojure.contrib.str-utils)
-  (:require [sniffles.db :as db])
+  (:require [sniffles.db :as db]
+	    [sniffles.utils :as utils])
 )
 
 (defmacro third [coll]
   `(first (rest (rest ~coll))))
 
 (defmacro defmodel [name & fields]
-  (let [primary-keys ; find if there are any :primary-key fields specified
-	(filter #(true? (:primary-key (third %)))
-		fields)]
-    (if ; if there are no primary keys, make sure the user isn't trying to make an :id field
-	(and (empty? primary-keys)
-	     (not (empty? (filter #(= (.toLowerCase (str (first %))) "id") fields))))
-      (throw (Exception. (str name ": \"id\": You can't use \"id\" as a field name, because each model automatically gets an \"id\" field if none of the fields have {:primary_key true}. You need to either remove/rename your \"id\" field or add {:primary_key true} to a field.")))
-      `(def ~name
-	    (with-meta
-	      ~(reduce #(assoc %1 (keyword (first %2))
-			       (create-field (second %2)
-					     (third %2)))
-		       (if (empty? primary-keys)
-			 {:id (create-field :auto-field {:primary-key true})}
-			 {})
-		       fields)
-	      {:is-model? true
-	       ;:name '~name
-	       :var #'~name
-	       :primary-key ~(if (empty? primary-keys) 
-			       [:id] 
-			       (vec (map #(keyword (first %)) primary-keys)))
-	       })))))
-
-(defmacro get-primary-key [obj]
-  `(map (fn [x#] (get ~obj x#)) (:primary-key (meta (var-get (:model (meta ~obj)))))))
-
-(defn create-object [typ & constructer]
-  (let [inputs (cond (and (= (count constructer) 1)
-			  (map? (first constructer)))
-		     (first constructer)
-		     :else ; making room for future expansion.
-		     (throw (UnsupportedOperationException.)))]
-    (let [obj
-	  (reduce #(assoc %1 (key %2)
-			  (if (contains? inputs (key %2))
-			    (let [value (field-cast (val %2) ((key %2) inputs))]
-			      (if (field-valid? (val %2) value)
-				value
-				(throw (Exception. "invalid field input"))))
-			    (field-default (val %2))))
-		  {} (seq typ))]
-      (with-meta obj
-	{:model (:var (meta typ))
-	 :id nil;(vec (map #(get obj %) (:primary-key (meta typ))))
-       }))))
-
-(defn save-object [obj]
-  (if (or (nil? (meta obj)) (not (contains? (meta obj) :model)))
-    (throw (Exception. 
-	    "unable to distinguish type of this object. make sure the meta of the object is retained"))
-    (let [typ (:model (meta obj))
-	  update? (:exists? (meta obj))]
-      ;(println typ update?)
-      (if update?
-	(do (db/update-values typ obj)
-	    (with-meta obj
-	      (conj (meta obj)
-		    {:id (get-primary-key obj)}
-		    )))
-	(let [r (db/insert-values typ obj)
-	      obj (conj obj r)]  ; add auto generated attributes to the obj
+  (let [name (utils/coerce-symbol name)  ; make sure name is a symbol!
+	[fields options] (split-with list? fields) ; split the fields and options
+	options (apply hash-map options) ; coerce options into a map
+	[fields options] 
+	(if (contains? options :primary-key) ; check if primary-key is specified
+	  [fields ; if so make sure the keys are keywords
+	   (assoc options :primary-key (vec (map #(utils/coerce-keyword %) (:primary-key options))))]
+	  [(cons '(:id :auto-field) fields) ; if not add an id field
+	   (assoc options :primary-key [:id])
+	   ])
+	]
+    `(def ~name
 	  (with-meta
-	    obj
-	    (conj (meta obj)
-		  {:exists? true
-		   :id (get-primary-key obj)})
-	))))))
+	    ~(apply hash-map
+		    (interleave (map #(utils/coerce-keyword (first %)) fields)
+				(map #(deffield (rest %)) fields)))
+	    (assoc ~options
+	      :var #'~name
+	      :project (symbol (re-find #"^.*(?=\.)" (str (ns-name *ns*)))))
+	    ))))
 
-     
+(defn create [model & key-value-pairs]
+  (with-meta
+    (conj ; get default values and overwrite them with inputs
+     (apply assoc model (interleave (map key model) (map #(get (second (val %)) :default) model))) 
+     (cond (and (= (count key-value-pairs) 1) (map? (first key-value-pairs))) ; if the first entry is a map
+	   (first key-value-pairs) ; assume the values have been input as a map
+	   (and (even? (count key-value-pairs)) (every? true? (map keyword? (take-nth 2 key-value-pairs))))
+	   (apply hash-map key-value-pairs) ; assume values have been input as list of key val pairs
+	   )
+     )
+    {:model (:var (meta model))}))
+
+(defmacro get-pk [obj]
+  `(vec (map (fn [x#] (get ~obj x#)) (:primary-key (meta (var-get (:model (meta ~obj))))))))
+
+(defn save [obj]
+  (let [r (if (contains? (meta obj) :id)
+	    (db/update-values (var-get (:model (meta obj))) obj)
+	    (db/insert-values (var-get (:model (meta obj))) obj))
+	obj (if (map? r) ; i.e. we have generated keys
+	      (conj obj r)
+	      obj)]
+    (with-meta
+      obj
+      (assoc (meta obj) :id (get-pk obj)))))
