@@ -3,9 +3,9 @@
 	sniffles.models)
   (:require sniffles.db))
 
+(comment ; testing save
 (println Poll)
 (println (meta Poll))
-
 (def x (create Poll :question "Kann ich bitte ein bier haben?"))
 (println "before save....")
 (println x)
@@ -19,3 +19,9 @@
 (println "after update....")
 (println x)
 (println (meta x))
+)
+
+(def b 2)
+;(println (select Poll))
+;(println (macroexpand `(select Poll (= :id b))))
+(println (select Poll (= :id b)))

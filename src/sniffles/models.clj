@@ -55,3 +55,31 @@
     (with-meta
       obj
       (assoc (meta obj) :id (get-pk obj)))))
+
+(defmacro objects [model & filter]
+  `(db/select ~model (filter-quote ~(first filter))))
+
+(defn select*
+  ([model] (get model nil))
+  ([model filter]
+     
+     )
+)
+
+(defmacro select [model & filter]
+  (if (empty? filter)
+    `(db/select ~model nil)
+    `(db/select ~model ~@(map utils/queryquote filter))))
+
+;(defn all [model) (get model nil))
+
+  ;(db/select model ~(first filter)))
+
+
+;  (for [r (db/select model filter)]
+ ;   r))
+     ;(let [m {:model (:var (meta model))}]
+      ;(with-meta
+;	r
+;	(assoc m
+;	  :id (get-pk (with-meta r m)))))))

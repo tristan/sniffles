@@ -92,11 +92,12 @@
 				     (:id (meta instance)))))
 	     nil))) ; return nil so it doesn't get mistaken for an insert by models/save
 
-(comment
-
-(defn select []
-    (sql/with-connection
-      (get-connection-info 'test-project)
-      (sql/with-query-results res ["select * from test_project.Poll"] (println res))))
-
+(defn select [model filter]
+  (let [tablename (utils/get-tablename model)]
+    (println "selecting from:" tablename)
+    (cql/run (get-connection-info (:project (meta model))) res
+;    (println ;(cql/compile-sql
+	     (cql/query ~tablename * ~filter)
+	     (apply list res)))
+	      ;(get-connection-info (:project (meta model))))))
 )
