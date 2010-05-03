@@ -24,6 +24,14 @@
 (defmacro get-fields [model]
   [])
 
+(declare queryquote)
+
+(defn processquery [form]
+  (cond (= (first form) 'contains?)
+	(list `list (list 'quote "like") (queryquote (second form)) (list 'str "%" (last form) "%"))
+	:else
+	(apply list `list (list 'quote (first form)) (map queryquote (rest form)))))
+
 
 (defn queryquote
   [form]
@@ -31,17 +39,10 @@
   (cond
    ;(self-eval? form) form
    ; (unquote? form)   (second form)
-    (symbol? form)    ;(let [vn (symbol (str (namespace form) "/" (name form)))
-			;    v (find-var (symbol vn))
-			 ;   r (if v (var-get v) v)]
-			;(cond (and v r (not (fn? r))) (list 'quote r)
-			 ;     :else                   (list 'quote form)))
-    (if (find-var (symbol (str "clojure.core/" (name form))))
-      (list 'quote form)
-      form)
+    (symbol? form)    form
     (keyword? form)   (list 'quote (coerce-symbol form))
-    (vector? form)    (vec (map queryquote form))
-    (map? form)       (apply hash-map (map queryquote (flatten-map form)))
-    (set? form)       (apply hash-set (map queryquote form))
-    (seq? form)       (list* `list (map queryquote form))
+    ;(vector? form)    (vec (map queryquote form))
+    ;(map? form)       (apply hash-map (map queryquote (flatten-map form)))
+    ;(set? form)       (apply hash-set (map queryquote form))
+    (seq? form)       (processquery form);(list* `list (map queryquote form))
     :else             (list 'quote form)))

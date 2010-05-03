@@ -21,7 +21,8 @@
 (println (meta x))
 )
 
-(def b 2)
+(def b "Wie")
 ;(println (select Poll))
 ;(println (macroexpand `(select Poll (= :id b))))
-(println (select Poll (= :id b)))
+;(println (select Poll (= :id b)))
+(println (select Poll (contains? :question b)))

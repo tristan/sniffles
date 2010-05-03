@@ -22,3 +22,6 @@
 	  generated-keys (.getGeneratedKeys #^PreparedStatement stmt)]
       {:update-count update-count
        :generated-keys (when (not (nil? generated-keys)) (resultset-seq generated-keys))})))
+
+
+;(swap! sql-function-type assoc "contains?" ::Infix)

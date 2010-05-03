@@ -7,3 +7,7 @@
       :password ""
       :host ""
       })
+
+;(def plugins ["sniffles.contrib.auth"
+;	      "sniffles.contrib.admin"]
+;)
