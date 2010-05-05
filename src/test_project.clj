@@ -5,6 +5,9 @@
 	    [test-project.views :as views])
   )
 
+(def debug true)
+(def development true)
+
 (def settings {
 })
 

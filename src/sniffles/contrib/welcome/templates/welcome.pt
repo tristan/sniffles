@@ -1,5 +1,6 @@
 <html>
   <body>
-    Sniffles Welcomes you!
+    <h1>Sniffles Welcomes you!</h1>
+    <p>You have been here <span tal:replace="session/visits|default">0</span> times before</p>
   </body>
 </html>
