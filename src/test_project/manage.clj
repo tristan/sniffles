@@ -1,13 +1,7 @@
-(ns test-project.manage
-  (:use clojure.contrib.command-line
-	clojure.contrib.str-utils)
-  (:require [sniffles.management :as management])
+(ns test-project
+  (:require sniffles)
   )
 
-(with-command-line *command-line-args*
-  "manages your project!"
-  [[syncdb? "sync models"]]
-  (cond syncdb?
-	(management/syncdb (re-gsub #"\.manage" "" (str *ns*)))
-	:else
-	nil))
+(def settings {})
+
+(sniffles/manage *command-line-args*)

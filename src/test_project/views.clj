@@ -1,6 +1,6 @@
 (ns test-project.views)
 
-(defn default [input]
+(defn default [request]
   "DEFAULT")
 
 (defn abc [input]
