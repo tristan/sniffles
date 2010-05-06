@@ -27,7 +27,7 @@
        anonymous-user))
 )
 
-(defn do-login [username password]
+(defn authenticate [username password]
   (let [user (get-user username)]
     (if (nil? (:password user))
       user
@@ -40,4 +40,5 @@
 (require 'sniffles.contrib.auth.views)
 
 (def settings {:template-root "src/sniffles/contrib/auth/templates/"})
-(def urls [[#"^login/$" sniffles.contrib.auth.views/login]])
+(def urls [[#"^login/$" sniffles.contrib.auth.views/login]
+	   [#"^logout/$" sniffles.contrib.auth.views/logout]])

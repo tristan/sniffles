@@ -3,6 +3,9 @@
   <body>
     <h1>test-project Login</h1>
     <form name="login" method="POST" action="">
+      <ul tal:condition="errors|nothing">
+	<li style="color:red;" tal:repeat="error errors" tal:content="error"></li>
+      </ul>
       Username: <input type="text" name="username"/><br/>
       Password: <input type="password" name="password"/><br/>
       <input type="hidden" name="redirect" value="/"/>

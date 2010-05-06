@@ -10,3 +10,9 @@
 
 (defn render-to-response [template req]
   (response (sniffles.conf.templates/render template req) req))
+
+(defn redirect [uri req]
+  (let [res (ring.util.response/redirect uri)]
+    (if (contains? req :session)
+      (assoc res :session (:session req))
+      res)))
