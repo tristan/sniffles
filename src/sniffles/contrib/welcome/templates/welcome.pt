@@ -1,6 +1,10 @@
 <html>
   <body>
-    <h1>Sniffles Welcomes you!</h1>
+    <h1>Sniffles Welcomes you, <span tal:replace="user/first-name|default">Nobody</span>!</h1>
+    <p>
+      <a href="login/" tal:condition="not:user/authenticated?">Login</a>
+      <a href="logout/" tal:condition="user/authenticated?">Logout</a>
+    </p>
     <p>You have been here <span tal:replace="session/visits|default">0</span> times before</p>
   </body>
 </html>

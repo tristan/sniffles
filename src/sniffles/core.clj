@@ -1,7 +1,10 @@
 (ns sniffles.core
   (:require ring.middleware.session
 	    ring.middleware.reload
-	    ring.middleware.stacktrace)
+	    ring.middleware.params
+	    ring.middleware.stacktrace
+	    sniffles.contrib.sessions.middleware
+	    sniffles.contrib.auth.middleware)
   (:use clojure.contrib.str-utils))
 
 (defn serve-error [errornr request]
@@ -22,7 +25,14 @@
 	    (let [adds (if (vector match)
 			 (apply hash-map (interleave (first (rest (rest urlpattern))) (rest match)))
 			 {})
-		  adds (assoc adds :remaining-uri (re-gsub (first urlpattern) "" url))]
+		  adds (assoc adds :remaining-uri (re-gsub (first urlpattern) "" url))
+		  adds (cond (and (vector? (first (rest (rest urlpattern)))) (map? (first (rest (rest (rest urlpattern))))))
+			     (conj adds (first (rest (rest (rest urlpattern)))))
+			     (map? (first (rest (rest urlpattern))))
+			     (conj adds (first (rest (rest urlpattern))))
+			     :else
+			     adds)
+		  ]
 	      (println "... found:" match)
 	      ((second urlpattern) (conj request adds)))
 	    (recur (rest urlpatterns))))))))
@@ -41,7 +51,10 @@
 	]
     (let [app (fn [req] ; TODO: prehaps resolve interesting things from the settings rather than just parsing the whole map
 		(dispatch (assoc req :settings (conj (or (:settings req) {}) settings)) urls))
-	  app (ring.middleware.session/wrap-session app) ; include sessions by default
+	  app (fn [req] (app (assoc req :uri (.substring (:uri req) 1)))) ; TODO: this doesn't need to be in a seperate fn.....
+	  app (sniffles.contrib.auth.middleware/wrap-auth app)
+	  app (ring.middleware.params/wrap-params app)
+	  app (ring.middleware.session/wrap-session app {:cookie-attrs {:user-id}}) ; include sessions by default
 	  app (if development? (ring.middleware.reload/wrap-reload app [(ns-name project)]) app) ; is in dev mode, wrap reloader
 	  ]
       (if debug? ; if debugging is turned on, get stacktrace output

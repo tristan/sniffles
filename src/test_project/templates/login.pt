@@ -1,0 +1,12 @@
+<html>
+  <head><title>TEST PROJECT - Login</title></head>
+  <body>
+    <h1>test-project Login</h1>
+    <form name="login" method="POST" action="">
+      Username: <input type="text" name="username"/><br/>
+      Password: <input type="password" name="password"/><br/>
+      <input type="hidden" name="redirect" value="/"/>
+      <input type="submit" value="Login"/>
+    </form>
+  </body>
+</html>

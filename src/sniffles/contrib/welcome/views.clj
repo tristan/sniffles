@@ -1,9 +1,8 @@
 (ns sniffles.contrib.welcome.views
-  (:use sniffles.conf.templates
-	ring.util.response
+  (:use sniffles.shortcuts
 	))
 
 (defn welcome [req]
   (let [visits (get (get req :session) :visits 0)]
-    (assoc (response (render "welcome.pt" req)) :session {:visits (inc visits)})
+    (assoc-in (render-to-response "welcome.pt" req) [:session :visits] (inc visits))
   ))
