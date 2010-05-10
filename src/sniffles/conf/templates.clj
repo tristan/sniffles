@@ -1,8 +1,7 @@
 (ns sniffles.conf.templates
   (:require clj-zpt.tal)
+  (:require clj-zpt.tales)
   (:use clojure.contrib.str-utils))
-
-; TODO: link functions, such as redirect to context
 
 (defn render* [base-dir pt context]
   (println "rendering template:" (str base-dir pt))
@@ -13,5 +12,3 @@
  )
 
 (defmacro render [pt context] `(render* (get (get ~context :settings) :template-root) ~pt ~context)) 
-
-

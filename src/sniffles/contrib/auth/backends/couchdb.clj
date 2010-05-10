@@ -24,6 +24,8 @@
   (let [uri (get settings :couchdb-uri)
 	proj (get settings :project-name)
 	db-name (str proj db-name-postfix)]
-    (try (cdb/document-get uri db-name uid)
-	 (catch java.io.FileNotFoundException e
-	   nil))))
+    (if (empty? uid)
+      nil ; an empty string for the uid will return the results of GET /db-name/ so ignore this cause to avoid issues
+      (try (cdb/document-get uri db-name uid)
+	   (catch java.io.FileNotFoundException e
+	     nil)))))

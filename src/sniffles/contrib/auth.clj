@@ -19,14 +19,11 @@
   `(get-in req [:user :authenticated?]))
 
 (defn get-user [uid]
-  (if (nil? uid) anonymous-user
-      (or 
-       (let [user (backend/get-user uid)]
-	 (if user
-	   (assoc user :authenticated? true)
-	   nil))
-       anonymous-user))
-)
+  (if (nil? uid) 
+    anonymous-user
+    (or 
+     (backend/get-user uid)
+     anonymous-user)))
 
 (defn- hex-digest [algo salt pass]
   (cond (= algo "sha1")
@@ -42,7 +39,6 @@
 (defn- check-password [raw encrypted]
   (let [[algo salt hash] (re-split #"\$" encrypted)
 	newhash (hex-digest algo salt raw)]
-    (println hash newhash)
     (= hash newhash)))
 
 (defn authenticate [username password]
@@ -52,7 +48,7 @@
 	(check-password "=00000000000000000" "sha1$00000$0000000000000000000000000000000000000000") ; do password check anyway, to avoid timebased attacks
 	user) ; return anonymous user
       (if (check-password password (:password user))
-	user
+	(assoc user :authenticated? true)
 	anonymous-user))))
 
 (defn initialise "initialise the backend to make sure everything is ready for use" [] (backend/initialise))
@@ -62,5 +58,5 @@
 (require 'sniffles.contrib.auth.views)
 
 (def settings {:template-root "src/sniffles/contrib/auth/templates/"})
-(def urls [[#"^login/$" sniffles.contrib.auth.views/login]
-	   [#"^logout/$" sniffles.contrib.auth.views/logout]])
+(def urls [:login [#"^login/$" sniffles.contrib.auth.views/login]
+	   :logout [#"^logout/$" sniffles.contrib.auth.views/logout]])

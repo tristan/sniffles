@@ -4,8 +4,18 @@
 	clojure.contrib.str-utils))
 
 (defn manage* [clargs ns file]
-  ;(System/setProperty "user.dir" (.getParent (java.io.File. file)))
+  (with-command-line clargs
+    "manages your project!"
+    [[runserver? "run server"]
+     [host "host address" "localhost"]
+     [port "server port" "8008"]
+     ]
+    (cond runserver?
+	  (.join (management/runserver ns host (Integer/parseInt port)))
+	  :else
+	  nil)))
 
+(defn initialise-project* [ns]
   ; push values into the active-project namespace
   (println "Initialising project settings...")
   (let [settings
@@ -20,25 +30,15 @@
     (if (not (map? settings))
       (throw (Exception. (str "settings defined in " (ns-name ns) " are not defined as a map")))
       (intern 'sniffles.active-project 'settings 
-	       (conj settings {:project-name (ns-name ns)
-			       :project-ns ns}))) ; add some other settings
+	      (conj settings {:project-name (ns-name ns)
+			      :project-ns ns}))) ; add some other settings
     (if (not (vector? urls))
       (throw (Exception. (str "urls defined in " (ns-name ns) " are not defined as a vector")))
       (intern 'sniffles.active-project 'urls
 	      urls))
-    )
-
-  (with-command-line clargs
-    "manages your project!"
-    [[runserver? "run server"]
-     [host "host address" "localhost"]
-     [port "server port" "8008"]
-     ]
-    (cond runserver?
-	  (management/runserver ns host (Integer/parseInt port))
-	  :else
-	  nil)))
-
+    ))
 
 (defmacro manage [clargs]
-  `(manage* ~clargs *ns* *file*))
+  `(do
+     (initialise-project* *ns*)
+     (when ~clargs (manage* ~clargs *ns*))))

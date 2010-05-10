@@ -5,9 +5,12 @@
 	    ring.middleware.stacktrace
 	    [sniffles.core :as core]))
 
-(defn runserver [project host port]
-  (ring.adapter.jetty/run-jetty 
-   (core/create-app project)
-   {:host host :port port})
-  )
+(defn runserver 
+  ([project] (runserver project "localhost" 8008))
+  ([project host port]
+     (println "STARTING SERVER" host port "...")
+     (ring.adapter.jetty/run-jetty 
+      (core/create-app project)
+      {:join? false :host host :port port})
+     ))
 

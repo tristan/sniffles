@@ -3,7 +3,7 @@
 	    ring.middleware.reload
 	    ring.middleware.params
 	    ring.middleware.stacktrace
-	    sniffles.contrib.sessions.middleware
+	    ;sniffles.contrib.sessions.middleware
 	    sniffles.contrib.auth.middleware)
   (:use clojure.contrib.str-utils))
 

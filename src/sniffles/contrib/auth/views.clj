@@ -6,7 +6,7 @@
   (cond (= (:request-method req) :get)
 	(render-to-response (or (:template req) "login.pt") req)
 	(= (:request-method req) :post)
-	(let [form (:form-params req)]
+	(let [form (:form-params req)] ; TODO: form validation. e.g. Don't allow "username" to be blank
 	  (let [user (auth/authenticate (get form "username") (get form "password"))]
 	    (if (and user (not (:anonymous? user)))
 	      (let [r (get req :redirect (get form "redirect" nil))

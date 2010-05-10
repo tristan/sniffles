@@ -2,8 +2,8 @@
   <body>
     <h1>Sniffles Welcomes you, <span tal:replace="user/first-name|default">Nobody</span>!</h1>
     <p>
-      <a tal:attributes="href string:auth/login/" href="login/" tal:condition="not:user/authenticated?">Login</a>
-      <a tal:attributes="href string:auth/logout/" href="logout/" tal:condition="user/authenticated?">Logout</a>
+      <a tal:attributes="href reverse:login" href="auth/login/" tal:condition="not:user/authenticated?">Login</a>
+      <a tal:attributes="href reverse:logout" href="auth/logout/" tal:condition="user/authenticated?">Logout</a>
     </p>
     <p>You have been here <span tal:replace="session/visits|default">0</span> times before</p>
   </body>

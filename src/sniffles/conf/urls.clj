@@ -1,7 +1,8 @@
 (ns sniffles.conf.urls
   (:refer-clojure :exclude [reverse])
   (:require [sniffles.utils.regex :as regex]
-	    [sniffles.active-project :as proj])
+	    [sniffles.active-project :as proj]
+	    clj-zpt.tales)
   (:use clojure.contrib.str-utils))
 
 ; TODO: this is very similar to core/create-app except it doesn't wrap the returned fn
@@ -44,7 +45,7 @@
 	    (recur prefix name (rest urlpatterns))))))
 
 (defn reverse 
-  ([name] (reverse nil))
+  ([name] (reverse name nil))
   ([name options] (reverse name options proj/urls))
   ([name options urls]
     (let [[prefix mapping] (get-named-url-mapping ["/"] name urls)
@@ -55,3 +56,9 @@
 		prefix (str-join "" (map #(if (instance? java.util.regex.Pattern %) (str-join "" (regex/normalise %)) %) prefix))]
 	    (str prefix (str-join "" (map #(if (vector? %) (get options (nth match-keys (first %))) %) normal)))))))))
 
+
+
+(defn tales-reverse [string context]
+  (reverse (keyword string)))
+
+(clj-zpt.tales/register-extension "reverse" tales-reverse)
