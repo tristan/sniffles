@@ -11,16 +11,22 @@
   (let [settings
 	(try (var-get (get (ns-map ns) 'settings))
 	     (catch NullPointerException e 
-	       (throw (Exception. (str "no settings defined in " (ns-name ns))))))]
+	       (throw (Exception. (str "no settings defined in " (ns-name ns))))))
+	urls
+	(try (var-get (get (ns-map ns) 'urls))
+	     (catch NullPointerException e 
+	       (throw (Exception. (str "no urls defined in " (ns-name ns))))))
+	]
     (if (not (map? settings))
       (throw (Exception. (str "settings defined in " (ns-name ns) " are not defined as a map")))
-;      nil)
       (intern 'sniffles.active-project 'settings 
-      ;(var-set #'project-settings
 	       (conj settings {:project-name (ns-name ns)
 			       :project-ns ns}))) ; add some other settings
+    (if (not (vector? urls))
+      (throw (Exception. (str "urls defined in " (ns-name ns) " are not defined as a vector")))
+      (intern 'sniffles.active-project 'urls
+	      urls))
     )
-  ;(println "project-settings:" project-settings (meta project-settings))
 
   (with-command-line clargs
     "manages your project!"

@@ -1,7 +1,7 @@
 (ns test-project
   (:require sniffles
 	    sniffles.contrib.welcome
-	    sniffles.contrib.auth.views
+	    sniffles.contrib.auth;.views
 	    [sniffles.conf.urls :as urls]
 	    [test-project.views :as views])
   )
@@ -15,8 +15,10 @@
 })
 
 (def urls [;[#"^admin/" (urls/include sniffles.contrib.admin)]
-	   [#"^login/" sniffles.contrib.auth.views/login {:template "login.pt"}]
-	   [#"" (urls/include sniffles.contrib.welcome)]
+	   ;:login [#"^login/" sniffles.contrib.auth.views/login {:template "login.pt" :redirect [:welcome]}]
+	   ;:logout [#"^logout/" sniffles.contrib.auth.views/logout {:redirect [:welcome]}]
+	   [#"^auth/" (urls/include sniffles.contrib.auth/urls)]
+	   [#"" (urls/include sniffles.contrib.welcome/urls)]
 	   ])
 
 (sniffles/manage *command-line-args*)

@@ -15,7 +15,7 @@
   (println "dispatching:" (:uri request))
   ;(try
   (let [url (get request :remaining-uri (get request :uri))]
-    (loop [urlpatterns urlpatterns]
+    (loop [urlpatterns (filter vector? urlpatterns)]
       (println "... trying:" (first urlpatterns))
       (if (empty? urlpatterns)
 	(serve-error 404 request)
@@ -34,7 +34,16 @@
 			     adds)
 		  ]
 	      (println "... found:" match)
-	      ((second urlpattern) (conj request adds)))
+	      (if (fn? (second urlpattern))
+		((second urlpattern) (conj request adds))
+		(let [urls (second urlpattern)
+		      ns (:ns (meta urls))
+		      settings (try (var-get (ns-resolve ns 'settings)) (catch NullPointerException e {}))
+		      urls (var-get urls)]
+		  (dispatch (conj request 
+				  {:settings (conj (:settings request) settings)
+				   :uri (re-gsub (first urlpattern) "" url)})
+			    urls))))
 	    (recur (rest urlpatterns))))))))
 
 (defn create-app [#^clojure.lang.Namespace project]

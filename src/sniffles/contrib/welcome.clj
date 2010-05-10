@@ -11,7 +11,7 @@
 
 (def settings {:template-root "src/sniffles/contrib/welcome/templates/"})
 
-(def urls [[#"^$" views/welcome]
-	   [#"" (include sniffles.contrib.auth)]])
+(def urls [:welcome [#"^$" views/welcome]
+	   [#"" (include sniffles.contrib.auth/urls)]])
 
 ;(println "getr:" (.getResource (.getClass *ns*) "/welcome/templates/welcome.pt"))

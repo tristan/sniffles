@@ -4,3 +4,4 @@
 ; which allows other functions to easily get access to these settings without having to do anything crazy
 
 (declare settings)
+(declare urls)
