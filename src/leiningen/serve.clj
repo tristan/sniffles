@@ -4,16 +4,12 @@
 
 (defn serve
   ([project app port host]
-     (println project (type project) app)
      (let [ns (symbol (first (re-split #"\/" app)))
 	   app (symbol (last (re-split #"\/" app)))]
-       (println ns app)
        (eval-in-project 
 	project
 	`(do (try (require '~'ring.adapter.jetty)
 		  (require '~ns)
-		  (println (ns-resolve '~ns
-				       '~app))
 		  (@(ns-resolve '~'ring.adapter.jetty
 				'~'run-jetty)
 				 (@(ns-resolve '~ns
