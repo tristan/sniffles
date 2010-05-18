@@ -2,7 +2,7 @@
   (:require [sniffles.utils.sha1 :as sha1])
   (:use clojure.contrib.str-utils))
 
-(def anonymous-user {:id nil
+(def anonymous-user {:_id nil
 		     :username "anonymous"
 		     :first-name "Anonymous"
 		     :last-name ""
@@ -16,6 +16,19 @@
 
 (defmacro authenticated? [req]
   `(get-in req [:user :authenticated?]))
+
+(defn get-user-by-id [req uid]
+  (let [backend (get-in req [:settings :persistence])]
+    (@(ns-resolve (:package backend) 'get) "users" uid backend)))
+
+; TODO: on couchdb, this depends on the username view being present. need a db initialisation step which adds this for new dbs
+(defn get-user-by-username [req username]
+  (let [backend (get-in req [:settings :persistence])]
+    (first (@(ns-resolve (:package backend) 'select) "users" "username" username backend))))
+
+(defn update-user [req user]
+  (let [backend (get-in req [:settings :persistence])]
+    (@(ns-resolve (:package backend) 'update) "users" user backend)))
 
 (defn- hex-digest [algo salt pass]
   (cond (= algo "sha1")
@@ -33,12 +46,15 @@
 	newhash (hex-digest algo salt raw)]
     (= hash newhash)))
 
-;(defn authenticate [username password]
-;  (let [user (get-user username)]
-;    (if (or (nil? user) (:anonymous? user))
-;      (do 
-;	(check-password "=00000000000000000" "sha1$00000$0000000000000000000000000000000000000000") ; do password check anyway, to avoid timebased attacks
-;	user) ; return anonymous user
- ;     (if (check-password password (:password user))
-;	(assoc user :authenticated? true)
-;	anonymous-user))))
+(defn authenticate [req]
+  (let [form (:form-params req) ; TODO: form validation. e.g. Don't allow "username" to be blank
+	username (get form "username") 
+	password (get form "password")]
+    (let [user (get-user-by-username req username)]
+      (if (or (nil? user) (:anonymous? user))
+	(do 
+	  (check-password "=00000000000000000" "sha1$00000$0000000000000000000000000000000000000000") ; do password check anyway, to avoid timebased attacks
+	  nil) ; return nil since we cannot authenticate this user
+	(if (check-password password (:password user))
+	  (assoc user :authenticated? true)
+	  nil)))))

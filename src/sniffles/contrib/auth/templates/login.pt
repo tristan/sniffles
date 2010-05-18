@@ -2,7 +2,7 @@
   <head><title>Login</title></head>
   <body>
     <h1>Login</h1>
-    <form name="login" method="POST" action="">
+    <form name="login" method="POST" action="" tal:condition="not:user/authenticated?">
       <ul tal:condition="errors|nothing">
 	<li tal:repeat="error errors" tal:content="error"></li>
       </ul>
@@ -10,6 +10,7 @@
       Password: <input type="password" name="password"/><br/>
       <input type="submit" value="Login"/>
     </form>
+    <h3 tal:condition="user/authenticated?">you are already logged in as ${user/id}</h3>
   </body>
 </html>
 

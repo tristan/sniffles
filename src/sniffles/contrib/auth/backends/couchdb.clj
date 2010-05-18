@@ -25,6 +25,7 @@
 	db-name (str proj db-name-postfix)]
     (if (empty? uid)
       nil ; an empty string for the uid will return the results of GET /db-name/ so ignore this cause to avoid issues
-      (try (cdb/document-get uri db-name uid)
+      (try (let [user (cdb/document-get uri db-name uid)]
+	     (assoc (assoc user :id (:_id user)) :authenticated? true))
 	   (catch java.io.FileNotFoundException e
 	     nil)))))

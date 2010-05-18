@@ -5,4 +5,4 @@
   (let [input (.getResourceAsStream (clojure.lang.RT/baseLoader) template)]
     (if (nil? input)
       (throw (java.io.FileNotFoundException. template))
-      (clj-zpt.tal/compile-template input))))
+      (:renderer (clj-zpt.tal/compile-template input)))))

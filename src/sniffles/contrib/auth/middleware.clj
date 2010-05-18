@@ -1,20 +1,15 @@
 (ns sniffles.contrib.auth.middleware
+  (:require [sniffles.contrib.auth :as auth])
   )
 
-(defn wrap-auth [app & options]
-  (let [options (apply hash-map options)
-	backend (cond (= (:backend options) "couchdb")
-		      (do
-			(use 'sniffles.contrib.auth.backends.couchdb)
-			(@(resolve 'initialise) options)
-			'sniffles.contrib.auth.backends.couchdb)
-		      :else
-		      (throw (Exception. "unknown backend: " (:backend options))))
-		      ]
-    (fn [req]
-      (let [req (assoc-in req [:settings :backend] backend)
-	    user-id (get-in req [:session :user-id])
-	    user-obj (@(ns-resolve backend 'get-user) options user-id)
-	    response (app (assoc req :user user-obj))]
-	response ; no need to do anything TODO: but maybe there is!
-	))))
+(defn wrap-auth [app config & options]
+  (ring.middleware.session/wrap-session ; add session stuff ; TODO: maybe the user should be responsible for this
+   (fn [req]
+     (let [user-id (get-in req [:session :user-id])
+	   user-obj (if (nil? user-id)
+		      auth/anonymous-user
+		      (or 
+		       (let [u (auth/get-user-by-id req user-id)]
+			 (if u (assoc u :authenticated? true) nil))
+		       auth/anonymous-user))]
+       (app (assoc req :user user-obj))))))
