@@ -46,3 +46,7 @@
 		      (kit/raise* e)))
 	(kit/handle cdb/DocumentNotFound e ; if document isn't found, silently try create it instead
 		    (create db doc options))))))
+
+(defn all [db options]
+  (let [[host db] (get-host-and-db options db)]
+    (cdb/document-list host db)))

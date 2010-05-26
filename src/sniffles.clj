@@ -1,6 +1,7 @@
 (ns sniffles
   (:use [sniffles.dispatch :only (dispatch reverse-route)]
-	sniffles.includes)
+	sniffles.includes
+	clojure.contrib.str-utils)
   (:require ring.middleware.session
 	    ring.middleware.params
 	    sniffles.persistence.middleware
@@ -12,7 +13,13 @@
     (tales/register-extension ; register reverse extention for tales
      "reverse"
      (fn tales-reverse [string context]
-       (reverse-route routes string context)))
+       (let [s (re-split #" " string)
+	     name (first s)
+	     opts (apply hash-map (rest s))
+	     ks (map keyword (keys opts))
+	     vs (map #(tales/evaluate % context) (vals opts))
+	     opts (zipmap ks vs)]
+       (reverse-route routes name opts))))
     (-> (fn [request] ; TODO: middleware wrap
 	  (dispatch routes request))
 	(ring.middleware.params/wrap-params) ; add parameter handling by default

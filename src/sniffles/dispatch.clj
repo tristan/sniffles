@@ -47,10 +47,12 @@
     response))
 
 (defn reverse-route [routes name options]
+  (println "reversing:" name options)
   (let [route (first (filter #(= (:name %) name) routes))]
     (if route 
       (let [norm (regex/normalise (:path route))]
-	(str-join "" (map #(if (vector? %) (get options (first %)) %) norm)))
+	(println norm)
+	(str-join "" (map #(if (vector? %) (get options (nth (:keys route) (first %))) %) norm)))
       nil)))
 
 (defn dispatch [routes request]

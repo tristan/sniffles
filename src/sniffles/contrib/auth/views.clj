@@ -26,7 +26,6 @@
 	    {:name "email" :label "Email" :type "text" :value (or (:email user) "")}
 	    {:name "location" :label "Location" :type "text" :value (or (:location user) "")}]})
 
-
 (defn profile
   [req options]
   (if (:anonymous? (:user req))
