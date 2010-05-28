@@ -1,26 +1,23 @@
-(ns sniffles.persistence)
+(ns sniffles.persistence
+  (:refer-clojure :exclude [get]))
 
-(defmacro get-backend [req]
-  `(get-in ~req [:settings :persistence]))
+(def backend 'sniffles.persistence.backends.couchdb)
+(def settings {})
 
-(defn get-backend-package [name]
-  (cond (= name "couchdb")
-	'sniffles.persistence.backends.couchdb))
+(defn set-backend [bkend]
+  (def backend bkend))
 
-(defmacro def-basic-function [tablename prefix]
-  (let [prefix (if (nil? prefix) "" prefix)
-	prefix (if (or (= prefix "") (.startsWith prefix "-")) prefix (str "-" prefix))]
-    `(do
-       (defn ~(symbol (str "get" prefix)) [id# req#]
-	 (let [backend# (get-backend req#)]
-	   (@(ns-resolve (:package backend#) '~'get) ~tablename id# backend#)))
-       (defn ~(symbol (str "create" prefix)) [doc# req#]
-	 (let [backend# (get-backend req#)]
-	   (@(ns-resolve (:package backend#) '~'create) ~tablename doc# backend#)))
-       (defn ~(symbol (str "update" prefix)) [doc# req#]
-	 (let [backend# (get-backend req#)]
-	   (@(ns-resolve (:package backend#) '~'update) ~tablename doc# backend#)))
-       (defn ~(symbol (str "all-" tablename)) [req#]
-	 (let [backend# (get-backend req#)]
-	   (@(ns-resolve (:package backend#) '~'all) ~tablename backend#)))
-     )))
+(defn set-settings [sets]
+  (def settings sets))
+
+(defn get [tablename id]
+  (@(ns-resolve backend 'get) tablename id))
+
+(defn create [tablename doc]
+  (@(ns-resolve backend 'create) tablename doc))
+
+(defn update [tablename doc]
+  (@(ns-resolve backend 'create) tablename doc))
+
+(defn select [tablename & options]
+  (apply @(ns-resolve backend 'select) tablename options))

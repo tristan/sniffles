@@ -1,5 +1,6 @@
 (ns sniffles.contrib.auth
-  (:require [sniffles.utils.sha1 :as sha1])
+  (:require [sniffles.utils.sha1 :as sha1]
+	    [sniffles.persistence :as persistence])
   (:use clojure.contrib.str-utils))
 
 (def anonymous-user {:_id nil
@@ -18,17 +19,14 @@
   `(get-in req [:user :authenticated?]))
 
 (defn get-user-by-id [req uid]
-  (let [backend (get-in req [:settings :persistence])]
-    (@(ns-resolve (:package backend) 'get) "users" uid backend)))
+  (persistence/get "users" uid))
 
 ; TODO: on couchdb, this depends on the username view being present. need a db initialisation step which adds this for new dbs
 (defn get-user-by-username [req username]
-  (let [backend (get-in req [:settings :persistence])]
-    (first (@(ns-resolve (:package backend) 'select) "users" "username" username backend))))
+  (first (persistence/select "users" "username" username)))
 
 (defn update-user [req user]
-  (let [backend (get-in req [:settings :persistence])]
-    (@(ns-resolve (:package backend) 'update) "users" user backend)))
+  (persistence/update "users" user))
 
 (defn- hex-digest [algo salt pass]
   (cond (= algo "sha1")

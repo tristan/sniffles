@@ -1,12 +1,15 @@
-(ns sniffles.persistence.middleware)
+(ns sniffles.persistence.middleware
+  (:require sniffles.persistence))
 
 (defn wrap-persistence [app config & options]
-  (let [backend (cond (= (:backend config) "couchdb")
-		      (do
-			(require 'sniffles.persistence.backends.couchdb)
-			'sniffles.persistence.backends.couchdb)
-		      :else
-		      (throw (Exception. "unknown backend: " (:backend config))))]
-    (fn [req]
-      (let [req (assoc-in req [:settings :persistence] (assoc config :package backend))]
-	(app req)))))
+  (println "wrapping persistence!")
+  (sniffles.persistence/set-backend
+   (cond (= (:persistence-backend config) "couchdb")
+	 (do
+	   (println "loading backend")
+	   (require 'sniffles.persistence.backends.couchdb)
+	   'sniffles.persistence.backends.couchdb)
+	 :else
+	 (throw (Exception. (str "unknown backend: " (:persistence-backend config))))))
+  (sniffles.persistence/set-settings config)
+  app) ; no need to do anything else

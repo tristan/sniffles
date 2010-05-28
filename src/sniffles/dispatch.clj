@@ -47,11 +47,9 @@
     response))
 
 (defn reverse-route [routes name options]
-  (println "reversing:" name options)
   (let [route (first (filter #(= (:name %) name) routes))]
     (if route 
       (let [norm (regex/normalise (:path route))]
-	(println norm)
 	(str-join "" (map #(if (vector? %) (get options (nth (:keys route) (first %))) %) norm)))
       nil)))
 
@@ -68,6 +66,7 @@
 	(let [res (handle match (assoc request :uri uri))] ; make sure uri gets passed as it's matched
 	  (if (= (:status res) 302) ; redirect!
 	    (let [r-uri (reverse-route routes (get-in res [:headers "Location"]) (get res :options))]
+	      (println "reversing to:" r-uri)
 	      (if r-uri
 		(assoc-in res [:headers "Location"] r-uri)
 		res)) ; TODO: make sure this is url like, and not just a failed lookup

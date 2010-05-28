@@ -18,7 +18,10 @@
 	    {:errors ["invalid username or password" "and you suck!"]}))))
 
 (defn logout [req options]
-  {:session {:user-id nil}})
+  (if (contains? options :redirect)
+    (assoc (redirect (:redirect options))
+      :session {:user-id nil})
+    {:session {:user-id nil}}))
 
 (defn information-form [user]
   {:fields [{:name "first-name" :label "First Name" :type "text" :value (or (:first-name user) "")}
