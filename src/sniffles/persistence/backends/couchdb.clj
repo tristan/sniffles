@@ -12,10 +12,12 @@
     (str (:couchdb-prefix ~options) "-" ~db)])
 
 (defn get 
-  ([db id] (get db id p/settings))
-  ([db id options]
-  (let [[host db] (get-host-and-db options db)]
-    (try (cdb/document-get host db id)
+  ([db id] (get db id nil))
+  ([db id rev]
+  (let [[host db] (get-host-and-db p/settings db)]
+    (try (if (nil? rev)
+	   (cdb/document-get host db id)
+	   (cdb/document-get host db id rev))
 	 (catch java.io.FileNotFoundException e
 	   nil)))))
 

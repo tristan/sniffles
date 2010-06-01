@@ -8,6 +8,7 @@
 	    sniffles.contrib.auth.middleware
 	    [sniffles.persistence :as persistence]
 	    [clj-zpt.tales :as tales])
+  (:import java.util.UUID)
   )
 
 (def settings {})
@@ -30,13 +31,23 @@
 
 ; :authentication assumes session
 (def couch-db-session-manager
-     {:store 
-      {:read (fn [sess-key] (get (persistence/get "sessions" sess-key) :session {}))
-      :write (fn [sess-key sess*]
-	       (let [sess (persistence/get "sessions" sess-key)
+     {:cookie-attrs {:path "/"
+		     :domain "127.0.0.1" ; TODO: un-hardcode these...
+		     :port "8005"}
+      :store
+      {:read (fn [sess-key]
+	       (println "calling session read:" sess-key)
+	       (get (persistence/get "sessions" sess-key) :session {}))
+      :write (fn [sess-key* sess*]
+	       (println "calling session write:" sess-key* sess*)
+	       (let [sess-key (or sess-key* (str (UUID/randomUUID)))
+		     sess (persistence/get "sessions" sess-key)
 		     sess (assoc sess :session sess*)]
-		 (get (persistence/update "sessions" sess) :session)))
-      :delete (fn [sess-key] {})} ; TODO: impl delete
+		 (if (contains? sess :_id)
+		   (persistence/update "sessions" sess)
+		   (persistence/create "sessions" (assoc sess :_id sess-key)))
+		 sess-key))
+      :delete (fn [sess-key] nil)} ; TODO: impl delete
      })
 
 (defn apply-auth [app config]
@@ -58,10 +69,22 @@
     (sniffles.persistence.middleware/wrap-persistence app config)
     app))
 
+(defn apply-debug [app config]
+  (if (and (contains? config :debug?)
+	   (true? (config :debug?)))
+    (fn [req]
+      (println "DEBUG: REQ:" req)
+      (let [res (app req)]
+	(println "DEBUG: RES:" res)
+	res))
+    app))
+
 (defmacro application [routes config & middleware]
   `(-> (application* ~routes ~config)
        ~@middleware
        (ring.middleware.params/wrap-params)
        (apply-auth ~config)
        (apply-session ~config)
-       (apply-persistence ~config)))
+       (apply-persistence ~config)
+       (apply-debug ~config)
+       ))

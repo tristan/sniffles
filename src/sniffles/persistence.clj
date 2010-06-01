@@ -10,8 +10,11 @@
 (defn set-settings [sets]
   (def settings sets))
 
-(defn get [tablename id]
-  (@(ns-resolve backend 'get) tablename id))
+(defn get 
+  ([tablename id]
+     (@(ns-resolve backend 'get) tablename id))
+  ([tablename id rev]
+     (@(ns-resolve backend 'get) tablename id rev)))
 
 (defn create [tablename doc]
   (@(ns-resolve backend 'create) tablename doc))
