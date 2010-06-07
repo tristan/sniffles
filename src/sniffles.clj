@@ -36,10 +36,8 @@
 		     :port "8005"}
       :store
       {:read (fn [sess-key]
-	       (println "calling session read:" sess-key)
 	       (get (persistence/get "sessions" sess-key) :session {}))
       :write (fn [sess-key* sess*]
-	       (println "calling session write:" sess-key* sess*)
 	       (let [sess-key (or sess-key* (str (UUID/randomUUID)))
 		     sess (persistence/get "sessions" sess-key)
 		     sess (assoc sess :session sess*)]
@@ -74,7 +72,7 @@
 	   (true? (config :debug?)))
     (fn [req]
       (println "DEBUG: REQ:" req)
-      (let [res (app req)]
+      (let [res (app (assoc req :debug? true))]
 	(println "DEBUG: RES:" res)
 	res))
     app))

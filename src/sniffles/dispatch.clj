@@ -60,13 +60,13 @@
 	  (first 
 	   (filter #(re-find (:path %) uri)
 		   routes))]
-      (println "got match with name:" (str "'" (:name match) "'"))
+      (if (request :debug?) (println "got match with name:" (str "'" (:name match) "'")) (print "\n"))
       (if (nil? match)
 	{:status 404 :body "404 buddy!"}
 	(let [res (handle match (assoc request :uri uri))] ; make sure uri gets passed as it's matched
 	  (if (= (:status res) 302) ; redirect!
 	    (let [r-uri (reverse-route routes (get-in res [:headers "Location"]) (get res :options))]
-	      (println "reversing to:" r-uri)
+	      (when (request :debug?) (println "reversing to:" r-uri))
 	      (if r-uri
 		(assoc-in res [:headers "Location"] r-uri)
 		res)) ; TODO: make sure this is url like, and not just a failed lookup

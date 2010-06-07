@@ -2,6 +2,7 @@
   (:require (ring.util [codec :as codec]
 		       [response :as response])))
 
+; TODO: mime-types
 (defn serve [request options]
   (let [root (get options :root "")
 	file (get options :file "")]
